@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Site settings</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      background: #571a31;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      color: #3b2a31;
+    }
+    .card {
+      width: 100%;
+      max-width: 440px;
+      padding: 32px 28px;
+      border-radius: 16px;
+      background: #fff7f3;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+    }
+    h1 { margin: 0 0 6px; color: #571a31; font-size: 22px; }
+    .hint { margin: 0 0 22px; color: #7a6670; font-size: 14px; line-height: 1.5; }
+    label { display: block; margin: 16px 0 6px; font-size: 14px; font-weight: 600; color: #571a31; }
+    input {
+      width: 100%;
+      height: 44px;
+      padding: 0 12px;
+      border: 1px solid #d9c3cb;
+      border-radius: 8px;
+      background: #fff;
+      font-size: 16px;
+      color: #3b2a31;
+    }
+    input:focus { outline: 2px solid #d94162; border-color: transparent; }
+    button {
+      width: 100%;
+      height: 46px;
+      margin-top: 22px;
+      border: 0;
+      border-radius: 8px;
+      background: #d94162;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .link {
+      display: inline-block;
+      width: auto;
+      height: auto;
+      margin: 18px 0 0;
+      padding: 0;
+      background: none;
+      color: #9b2646;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: underline;
+    }
+    .msg { margin-top: 16px; padding: 10px 12px; border-radius: 8px; font-size: 14px; line-height: 1.45; display: none; }
+    .msg.show { display: block; }
+    .msg.ok { background: #e3f5e6; color: #1e6b2e; }
+    .msg.err { background: #fde4e8; color: #9b2646; }
+    .preview {
+      margin-top: 20px;
+      padding: 14px;
+      border-radius: 10px;
+      background: #571a31;
+      color: #fff;
+      font-size: 14px;
+    }
+    .preview strong { display: block; margin-top: 4px; font-size: 18px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .view { display: none; }
+    .view.active { display: block; }
+    .small { font-size: 12px; color: #7a6670; margin-top: 6px; }
+  </style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- Loading -->
+  <div class="view active" id="view-loading">
+    <h1>Site settings</h1>
+    <p class="hint">Loading…</p>
+  </div>
+
+  <!-- First-time setup -->
+  <div class="view" id="view-setup">
+    <h1>First-time setup</h1>
+    <p class="hint">Paste the GitHub access token for this site and choose a password. The token is saved encrypted with your password, so after this you only need the password.</p>
+    <form id="setup-form">
+      <label for="s-token">GitHub access token</label>
+      <input id="s-token" type="password" autocomplete="off" placeholder="github_pat_…" required>
+      <label for="s-pass">New password</label>
+      <input id="s-pass" type="password" autocomplete="new-password" minlength="10" required>
+      <p class="small">At least 10 characters. A short phrase is easiest to remember.</p>
+      <label for="s-pass2">Repeat password</label>
+      <input id="s-pass2" type="password" autocomplete="new-password" minlength="10" required>
+      <button type="submit">Save setup</button>
+    </form>
+    <div class="msg" id="setup-msg"></div>
+    <button class="link" type="button" id="to-login" hidden>Back to login</button>
+  </div>
+
+  <!-- Login -->
+  <div class="view" id="view-login">
+    <h1>Site settings</h1>
+    <p class="hint">Enter your password to change the masterclass date and time.</p>
+    <form id="login-form">
+      <label for="l-pass">Password</label>
+      <input id="l-pass" type="password" autocomplete="current-password" required>
+      <button type="submit">Log in</button>
+    </form>
+    <div class="msg" id="login-msg"></div>
+    <button class="link" type="button" id="to-setup">Forgot password / new token</button>
+  </div>
+
+  <!-- Edit settings -->
+  <div class="view" id="view-edit">
+    <h1>Masterclass date &amp; time</h1>
+    <p class="hint">Changes go live on the landing page about a minute after you save.</p>
+    <form id="edit-form">
+      <div class="row">
+        <div>
+          <label for="e-date">Date</label>
+          <input id="e-date" type="date" required>
+        </div>
+        <div>
+          <label for="e-time">Time (IST)</label>
+          <input id="e-time" type="time" required>
+        </div>
+      </div>
+      <div class="preview">
+        On the page it will show:
+        <strong id="preview-date">–</strong>
+        <strong id="preview-time">–</strong>
+      </div>
+      <button type="submit">Save changes</button>
+    </form>
+    <div class="msg" id="edit-msg"></div>
+    <button class="link" type="button" id="logout">Log out</button>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  // ---------- Where the site lives on GitHub ----------
+  var OWNER = 'vibhakreedaloka';
+  var REPO = 'resilientwithkanti';
+  var BRANCH = 'main';
+  var SETTINGS_PATH = 'settings.js';
+  var KEY_PATH = 'admin/key.json';
+  var API = 'https://api.github.com/repos/' + OWNER + '/' + REPO + '/contents/';
+  var PBKDF2_ROUNDS = 600000;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var token = sessionStorage.getItem('site-admin-token');   // cleared when the tab closes
+  var settingsSha = null;
+  var keyFileSha = null;
+
+  function show(view) {
+    document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+    $('view-' + view).classList.add('active');
+  }
+  function message(id, text, ok) {
+    var el = $(id);
+    el.textContent = text;
+    el.className = 'msg show ' + (ok ? 'ok' : 'err');
+  }
+  function clearMessage(id) { $(id).className = 'msg'; }
+
+  // ---------- Small helpers ----------
+  function b64encodeBytes(bytes) {
+    var s = ''; bytes = new Uint8Array(bytes);
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+  function b64decodeBytes(str) {
+    var s = atob(str), out = new Uint8Array(s.length);
+    for (var i = 0; i < s.length; i++) out[i] = s.charCodeAt(i);
+    return out;
+  }
+  function textToB64(text) { return b64encodeBytes(new TextEncoder().encode(text)); }
+  function b64ToText(b64) { return new TextDecoder().decode(b64decodeBytes(b64.replace(/\s/g, ''))); }
+
+  // ---------- Encryption of the token with the password ----------
+  async function deriveKey(password, salt, rounds) {
+    var base = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), 'PBKDF2', false, ['deriveKey']);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: salt, iterations: rounds, hash: 'SHA-256' },
+      base, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+  }
+  async function encryptToken(tok, password) {
+    var salt = crypto.getRandomValues(new Uint8Array(16));
+    var iv = crypto.getRandomValues(new Uint8Array(12));
+    var key = await deriveKey(password, salt, PBKDF2_ROUNDS);
+    var data = await crypto.subtle.encrypt({ name: 'AES-GCM', iv: iv }, key, new TextEncoder().encode(tok));
+    return { v: 1, rounds: PBKDF2_ROUNDS, salt: b64encodeBytes(salt), iv: b64encodeBytes(iv), data: b64encodeBytes(data) };
+  }
+  async function decryptToken(blob, password) {
+    var key = await deriveKey(password, b64decodeBytes(blob.salt), blob.rounds);
+    var data = await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b64decodeBytes(blob.iv) }, key, b64decodeBytes(blob.data));
+    return new TextDecoder().decode(data);
+  }
+
+  // ---------- GitHub API ----------
+  async function gh(method, path, body, useToken) {
+    var headers = { 'Accept': 'application/vnd.github+json' };
+    if (useToken) headers['Authorization'] = 'Bearer ' + useToken;
+    var res = await fetch(API + path + (method === 'GET' ? '?ref=' + BRANCH + '&t=' + Date.now() : ''), {
+      method: method,
+      headers: headers,
+      body: body ? JSON.stringify(body) : undefined,
+      cache: 'no-store'
+    });
+    var json = null;
+    try { json = await res.json(); } catch (e) {}
+    return { status: res.status, ok: res.ok, json: json };
+  }
+  function explain(res) {
+    if (res.status === 401) return 'GitHub did not accept the token (it may have expired). Use “Forgot password / new token” to set up again.';
+    if (res.status === 403) return 'The token is not allowed to change this repository. Check it has “Contents: Read and write” for ' + REPO + '.';
+    if (res.status === 404) return 'Could not find the repository ' + OWNER + '/' + REPO + ', or the token cannot see it.';
+    if (res.status === 409) return 'The file changed in the meantime. Please log out, log in again and retry.';
+    return 'Something went wrong (GitHub said ' + res.status + '). Please try again.';
+  }
+
+  // ---------- Date / time formatting (same as the landing page) ----------
+  function formatDate(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
+    if (!m) return '–';
+    var d = new Date(Date.UTC(+m[1], +m[2] - 1, +m[3]));
+    var day = +m[3];
+    var suffix = (day % 100 >= 11 && day % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[day % 10] || 'th');
+    return d.toLocaleDateString('en-US', { weekday: 'short', timeZone: 'UTC' }) + ' | ' + day + suffix + ' ' +
+      d.toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' });
+  }
+  function formatTime(hhmm) {
+    var m = /^(\d{1,2}):(\d{2})$/.exec(hhmm || '');
+    if (!m) return '–';
+    var h = +m[1], ampm = h >= 12 ? 'PM' : 'AM';
+    h = h % 12 || 12;
+    return (h < 10 ? '0' : '') + h + ':' + m[2] + ' ' + ampm + ' IST';
+  }
+  function updatePreview() {
+    $('preview-date').textContent = formatDate($('e-date').value);
+    $('preview-time').textContent = formatTime($('e-time').value);
+  }
+  function buildSettingsFile(date, time) {
+    return '// Site settings — updated by the admin page (/admin/).\n' +
+      '// You can also edit this by hand: date as YYYY-MM-DD, time as 24-hour HH:MM (India time).\n' +
+      'window.SITE_SETTINGS = {\n' +
+      '  "webinarDate": "' + date + '",\n' +
+      '  "webinarTime": "' + time + '"\n' +
+      '};\n';
+  }
+
+  // ---------- Screens ----------
+  async function start() {
+    if (!window.crypto || !crypto.subtle) {
+      $('view-loading').querySelector('.hint').textContent = 'Please open this page over https:// (or in Chrome) — this browser blocked the security features it needs.';
+      return;
+    }
+    if (token) { openEditor(); return; }
+    var res = await gh('GET', KEY_PATH);
+    if (res.status === 404) { show('setup'); return; }
+    if (!res.ok) {
+      $('view-loading').querySelector('.hint').textContent = 'Could not reach GitHub. Check your internet connection and reload.';
+      return;
+    }
+    keyFileSha = res.json.sha;
+    window.__keyBlob = JSON.parse(b64ToText(res.json.content));
+    show('login');
+    $('l-pass').focus();
+  }
+
+  async function openEditor() {
+    show('edit');
+    clearMessage('edit-msg');
+    var res = await gh('GET', SETTINGS_PATH, null, token);
+    if (!res.ok) {
+      if (res.status === 401) { sessionStorage.removeItem('site-admin-token'); token = null; }
+      message('edit-msg', explain(res), false);
+      return;
+    }
+    settingsSha = res.json.sha;
+    var text = b64ToText(res.json.content);
+    var d = /"webinarDate"\s*:\s*"([^"]*)"/.exec(text);
+    var t = /"webinarTime"\s*:\s*"([^"]*)"/.exec(text);
+    $('e-date').value = d ? d[1] : '';
+    $('e-time').value = t ? t[1] : '19:00';
+    updatePreview();
+  }
+
+  // Login
+  $('login-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = this.querySelector('button'); btn.disabled = true; btn.textContent = 'Checking…';
+    clearMessage('login-msg');
+    try {
+      token = await decryptToken(window.__keyBlob, $('l-pass').value);
+      sessionStorage.setItem('site-admin-token', token);
+      $('l-pass').value = '';
+      await openEditor();
+    } catch (err) {
+      message('login-msg', 'Wrong password.', false);
+    }
+    btn.disabled = false; btn.textContent = 'Log in';
+  });
+
+  // Save settings
+  $('e-date').addEventListener('input', updatePreview);
+  $('e-time').addEventListener('input', updatePreview);
+  $('edit-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var date = $('e-date').value, time = $('e-time').value;
+    if (!date || !time) { message('edit-msg', 'Please pick both a date and a time.', false); return; }
+    var btn = this.querySelector('button'); btn.disabled = true; btn.textContent = 'Saving…';
+    clearMessage('edit-msg');
+    var res = await gh('PUT', SETTINGS_PATH, {
+      message: 'Masterclass date set to ' + formatDate(date) + ', ' + formatTime(time),
+      content: textToB64(buildSettingsFile(date, time)),
+      sha: settingsSha,
+      branch: BRANCH
+    }, token);
+    if (res.ok) {
+      settingsSha = res.json.content.sha;
+      message('edit-msg', 'Saved! The landing page will show ' + formatDate(date) + ' at ' + formatTime(time) + ' in about a minute.', true);
+    } else {
+      message('edit-msg', explain(res), false);
+    }
+    btn.disabled = false; btn.textContent = 'Save changes';
+  });
+
+  // Setup
+  $('setup-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var tok = $('s-token').value.trim(), p1 = $('s-pass').value, p2 = $('s-pass2').value;
+    clearMessage('setup-msg');
+    if (p1.length < 10) { message('setup-msg', 'Password must be at least 10 characters.', false); return; }
+    if (p1 !== p2) { message('setup-msg', 'The two passwords do not match.', false); return; }
+    var btn = this.querySelector('button'); btn.disabled = true; btn.textContent = 'Saving…';
+    // Check the token can read the settings file
+    var check = await gh('GET', SETTINGS_PATH, null, tok);
+    if (!check.ok) { message('setup-msg', explain(check), false); btn.disabled = false; btn.textContent = 'Save setup'; return; }
+    var existing = await gh('GET', KEY_PATH, null, tok);
+    var blob = await encryptToken(tok, p1);
+    var body = { message: 'Admin: update encrypted access key', content: textToB64(JSON.stringify(blob, null, 2) + '\n'), branch: BRANCH };
+    if (existing.ok) body.sha = existing.json.sha;
+    var res = await gh('PUT', KEY_PATH, body, tok);
+    btn.disabled = false; btn.textContent = 'Save setup';
+    if (!res.ok) { message('setup-msg', explain(res), false); return; }
+    $('s-token').value = $('s-pass').value = $('s-pass2').value = '';
+    token = tok;
+    sessionStorage.setItem('site-admin-token', token);
+    window.__keyBlob = blob;
+    await openEditor();
+    message('edit-msg', 'Setup done. From now on you only need your password.', true);
+  });
+
+  $('to-setup').addEventListener('click', function () { $('to-login').hidden = false; show('setup'); });
+  $('to-login').addEventListener('click', function () { show('login'); });
+  $('logout').addEventListener('click', function () {
+    sessionStorage.removeItem('site-admin-token'); token = null;
+    if (window.__keyBlob) show('login'); else start();
+  });
+
+  start();
+})();
+</script>
+</body>
+</html>
