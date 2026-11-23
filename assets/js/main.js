@@ -1,23 +1,11 @@
 /* resilientwithkanti.com — small page behaviours
-   1. Registration popup (any element with data-open-form opens it)
-   2. Form submit -> Pabbly webhook -> Thank You page
-   3. Tick-box cards in "Then this Masterclass was built for you"
-   4. Photo lightbox (links with data-lightbox)
-   5. Webinar date/time from settings.js
+   1. Webinar date/time from settings.js
+   2. Tick-box cards in "Then this Masterclass was built for you"
+   3. Photo lightbox (links with data-lightbox)
+   ("Save My Free Seat" buttons are plain links to the checkout page, set in lp-new/index.html)
 */
 (function () {
-  // ---- Settings you may want to change ----
-  var WEBHOOK_URL = 'https://connect.pabbly.com/webhook-listener/webhook/IjU3NjMwNTZjMDYzZjA0MzAi_pc/IjU3NjcwNTZiMDYzNTA0MzQ1MjY1NTUzMjUxMzAi_pc';
-  var THANK_YOU_PAGE = '../thank-you/';
-  var FORM_NAME = 'Masterclass Registation';
-
-  // When the file is opened by double-click (file://), folders don't open
-  // their index.html automatically, so add it.
-  function pageUrl(path) {
-    return location.protocol === 'file:' ? path + 'index.html' : path;
-  }
-
-  // ---- 5. Webinar date / time (from settings.js) ----
+  // ---- 1. Webinar date / time (from settings.js) ----
   // "2026-11-28" -> "Sat | 28th Nov"     "19:00" -> "07:00 PM IST"
   function formatDate(iso) {
     var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || '');
@@ -45,77 +33,7 @@
     if (text) el.textContent = text;   // otherwise keep the text already in the HTML
   });
 
-  // ---- 1. Popup ----
-  var modal = document.getElementById('register');
-  function openModal(e) {
-    if (e) e.preventDefault();
-    if (!modal) return;
-    modal.classList.add('is-open');
-    modal.setAttribute('aria-hidden', 'false');
-    document.body.style.overflow = 'hidden';
-    var first = modal.querySelector('input');
-    if (first) setTimeout(function () { first.focus(); }, 50);
-  }
-  function closeModal() {
-    if (!modal) return;
-    modal.classList.remove('is-open');
-    modal.setAttribute('aria-hidden', 'true');
-    document.body.style.overflow = '';
-  }
-  document.querySelectorAll('[data-open-form]').forEach(function (el) {
-    el.addEventListener('click', openModal);
-  });
-  if (modal) {
-    modal.addEventListener('click', function (e) { if (e.target === modal) closeModal(); });
-    modal.querySelector('.modal__close').addEventListener('click', closeModal);
-  }
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape') { closeModal(); closeLightbox(); }
-  });
-
-  // ---- 2. Form submit ----
-  var form = document.getElementById('reg-form');
-  if (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      if (!form.reportValidity()) return;
-      var btn = form.querySelector('button[type=submit]');
-      btn.disabled = true;
-      btn.textContent = 'Saving...';
-
-      var v = function (name) { return form.elements[name].value.trim(); };
-      var now = new Date();
-      var data = new URLSearchParams();
-      // Same field names the old WordPress form sent, so Pabbly keeps working.
-      data.append('Name', v('name'));
-      data.append('Email', v('email'));
-      data.append('Phone', v('phone'));
-      data.append('Phone ', v('phone'));
-      data.append('What is the one thing you keep putting off?', v('putting_off'));
-      data.append('Date', now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }));
-      data.append('Time', now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }));
-      data.append('Page URL', location.href);
-      data.append('User Agent', navigator.userAgent);
-      data.append('form_name', FORM_NAME);
-
-      var done = false;
-      var go = function () {
-        if (done) return;
-        done = true;
-        location.href = pageUrl(THANK_YOU_PAGE);
-      };
-      fetch(WEBHOOK_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        keepalive: true,
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-        body: data.toString()
-      }).then(go, go);
-      setTimeout(go, 4000);
-    });
-  }
-
-  // ---- 3. Tick-box cards ----
+  // ---- 2. Tick-box cards ----
   document.querySelectorAll('.check').forEach(function (item) {
     item.addEventListener('click', function () {
       var on = item.classList.toggle('is-checked');
@@ -126,9 +44,10 @@
     });
   });
 
-  // ---- 4. Lightbox ----
+  // ---- 3. Lightbox ----
   var lightbox = null;
   function closeLightbox() { if (lightbox) lightbox.classList.remove('is-open'); }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeLightbox(); });
   document.querySelectorAll('[data-lightbox]').forEach(function (link) {
     link.addEventListener('click', function (e) {
       e.preventDefault();

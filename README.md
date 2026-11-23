@@ -6,8 +6,8 @@ Plain HTML + CSS site, hosted on GitHub Pages.
 | URL | File |
 |---|---|
 | `/` | `index.html` – Meet Your Mentor |
-| `/lp-new/` | `lp-new/index.html` – masterclass landing page + registration popup |
-| `/thank-you/` | `thank-you/index.html` – shown after registering |
+| `/lp-new/` | `lp-new/index.html` – masterclass landing page (buttons go to the TagMango checkout) |
+| `/thank-you/` | `thank-you/index.html` – old thank-you page (no longer used by the landing page) |
 | `/admin/` | `admin/index.html` – password-protected date/time editor (not linked anywhere) |
 | `/lp/`, `/lp-1/`, `/my-lp/`, `/home/` | old addresses, redirect to `/lp-new/` |
 
@@ -23,13 +23,12 @@ The landing page updates about a minute later.
 ## Common edits
 - **Text, testimonials, FAQs** – `lp-new/index.html`; each section is marked with a `<!-- ==== ... ==== -->` comment.
 - **Colours and fonts** – top of `assets/css/style.css` (`:root`).
-- **Pabbly webhook / thank-you page** – top of `assets/js/main.js`.
+- **Checkout link** – `lp-new/index.html`, search for `learn.resilientwithkanti.com` (used by every "Save My Free Seat" button).
 - **WhatsApp community link** – `thank-you/index.html`.
 - **Images** – `assets/img/`.
 
 ## Preview on your computer
 Double-click any `index.html`, or run `python3 -m http.server 8000` in this folder and open http://localhost:8000/lp-new/.
-Note: submitting the form while previewing sends a real entry to Pabbly / the Google Sheet.
 
 ## Publish
 ```
